@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>催收业务生态分析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f5f7fa;
+  --bg3: #edf0f5;
+  --border: #e2e7f0;
+  --border2: #c8d4e8;
+  --text: #1a2236;
+  --text2: #4a566e;
+  --text3: #8494ad;
+  --gold: #96720a;
+  --blue-c: #1a5aa8;
+  --blue-bg: #ebf2fb;
+  --blue-bd: #b8d0f0;
+  --teal-c: #0d7a60;
+  --teal-bg: #e8f5f1;
+  --teal-bd: #9fd4c4;
+  --amber-c: #8a5e08;
+  --amber-bg: #fdf4e3;
+  --amber-bd: #e8c97a;
+  --coral-c: #a83020;
+  --coral-bg: #fdf0ee;
+  --coral-bd: #e8b0a8;
+  --purple-c: #4e36a8;
+  --purple-bg: #f0eefb;
+  --purple-bd: #c0b4f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 400;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+.page { max-width: 980px; margin: 0 auto; padding: 56px 40px 100px; }
+
+/* ── Header ── */
+.hd {
+  padding-bottom: 36px;
+  margin-bottom: 56px;
+  border-bottom: 2px solid var(--border);
+  position: relative;
+}
+.hd::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--gold);
+}
+.hd-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.14em; color: var(--gold);
+  text-transform: uppercase; margin-bottom: 16px;
+}
+.hd-eyebrow::before {
+  content: ''; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--gold);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+h1 {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(24px, 3.6vw, 38px);
+  font-weight: 700; color: var(--text);
+  line-height: 1.25; letter-spacing: 0.02em;
+  margin-bottom: 12px;
+}
+.hd-sub {
+  color: var(--text2); font-size: 15px; line-height: 1.8;
+   font-weight: 300;
+}
+
+/* ── Section heading ── */
+.sec-hd {
+  display: flex; align-items: center; gap: 14px;
+  margin: 56px 0 24px;
+}
+.sec-hd-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.16em; color: var(--text3);
+  text-transform: uppercase; white-space: nowrap;
+}
+.sec-hd-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 16px; font-weight: 600; color: var(--text);
+  letter-spacing: 0.04em;
+}
+.sec-hd-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ── Timeline ── */
+.timeline { position: relative; }
+
+/* Vertical rail */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 18px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--blue-bd) 0%, var(--teal-bd) 30%, var(--amber-bd) 60%, var(--coral-bd) 100%);
+}
+
+.t-item {
+  display: flex; gap: 28px;
+  padding-bottom: 8px;
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.t-item.vis { opacity: 1; transform: none; }
+.t-item:nth-child(1){transition-delay:.08s}
+.t-item:nth-child(2){transition-delay:.18s}
+.t-item:nth-child(3){transition-delay:.28s}
+.t-item:nth-child(4){transition-delay:.38s}
+.t-item:nth-child(5){transition-delay:.48s}
+
+/* Left column */
+.t-left {
+  display: flex; flex-direction: column;
+  align-items: center; flex-shrink: 0; width: 38px;
+}
+.t-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid; flex-shrink: 0;
+  background: #fff; margin-top: 22px; position: relative; z-index: 1;
+}
+.t-vline {
+  flex: 1; width: 2px; margin-top: 6px;
+  background: linear-gradient(to bottom, var(--border2) 0%, transparent 100%);
+  min-height: 24px;
+}
+
+/* Card */
+.t-card {
+  flex: 1; border-radius: 12px; padding: 24px 28px;
+  border: 1px solid; margin-bottom: 8px;
+  transition: box-shadow .25s;
+}
+.t-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+
+.t-card-top {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+  margin-bottom: 4px; flex-wrap: wrap;
+}
+.t-stage-name {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 16px; font-weight: 600; color: var(--text);
+  letter-spacing: 0.03em;
+}
+.t-time-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.1em; padding: 3px 9px;
+  border-radius: 4px; border: 1px solid;
+  white-space: nowrap; flex-shrink: 0; margin-top: 3px;
+}
+
+/* Ownership row */
+.t-ownership {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em; padding: 4px 10px 4px 8px;
+  border-radius: 6px; margin: 10px 0 16px;
+  border: 1px solid;
+}
+.t-ownership-icon { font-size: 12px; }
+
+/* Description */
+.t-desc {
+  font-size: 13.5px; color: var(--text2);
+  line-height: 1.85; margin-bottom: 18px;
+  font-weight: 300;
+}
+.t-desc b { color: var(--text); font-weight: 500; }
+
+/* Two-path note */
+.t-fork {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 18px;
+}
+.t-fork-box {
+  border-radius: 8px; padding: 12px 14px;
+  border: 1px dashed;
+}
+.t-fork-label {
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.06em; margin-bottom: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+}
+.t-fork-body { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+
+/* Participants grid */
+.t-participants {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+}
+.t-part {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  transition: border-color .2s, transform .2s;
+}
+.t-part:hover { border-color: var(--border2); transform: translateY(-2px); }
+.t-part-name {
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text); margin-bottom: 4px;
+}
+.t-part-detail {
+  font-size: 11.5px; color: var(--text3); line-height: 1.6;
+}
+.t-part-tag {
+  margin-top: 8px; display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; padding: 2px 7px;
+  border-radius: 3px; letter-spacing: 0.04em;
+}
+
+/* Arrow between stages */
+.t-arrow {
+  display: flex; align-items: center;
+  padding: 0 0 8px 52px; gap: 10px;
+  color: var(--text3);
+}
+.t-arrow-line {
+  width: 20px; height: 1px;
+  background: var(--border2); flex-shrink: 0;
+}
+.t-arrow-text {
+  font-size: 11.5px; color: var(--text3);
+  font-style: italic; white-space: nowrap;
+}
+.t-arrow-tip { font-size: 13px; color: var(--border2); }
+
+/* ── Color themes ── */
+/* Blue – S1 */
+.s1 .t-dot { border-color: var(--blue-c); background: var(--blue-bg); }
+.s1 .t-card { background: var(--blue-bg); border-color: var(--blue-bd); }
+.s1 .t-time-badge { color: var(--blue-c); border-color: var(--blue-bd); background: #fff; }
+.s1 .t-ownership { background: #fff; border-color: var(--blue-bd); color: var(--blue-c); }
+.s1 .t-part-tag { background: var(--blue-bg); color: var(--blue-c); }
+
+/* Teal – S2 */
+.s2 .t-dot { border-color: var(--teal-c); background: var(--teal-bg); }
+.s2 .t-card { background: var(--teal-bg); border-color: var(--teal-bd); }
+.s2 .t-time-badge { color: var(--teal-c); border-color: var(--teal-bd); background: #fff; }
+.s2 .t-ownership { background: #fff; border-color: var(--teal-bd); color: var(--teal-c); }
+.s2 .t-part-tag { background: var(--teal-bg); color: var(--teal-c); }
+
+/* Amber – S3 */
+.s3 .t-dot { border-color: var(--amber-c); background: var(--amber-bg); }
+.s3 .t-card { background: var(--amber-bg); border-color: var(--amber-bd); }
+.s3 .t-time-badge { color: var(--amber-c); border-color: var(--amber-bd); background: #fff; }
+.s3 .t-ownership { background: #fff; border-color: var(--amber-bd); color: var(--amber-c); }
+.s3 .t-part-tag { background: var(--amber-bg); color: var(--amber-c); }
+.s3 .t-fork-box { border-color: var(--amber-bd); background: rgba(255,255,255,.7); }
+.s3 .t-fork-label { color: var(--amber-c); }
+
+/* Coral – S4 */
+.s4 .t-dot { border-color: var(--coral-c); background: var(--coral-bg); }
+.s4 .t-card { background: var(--coral-bg); border-color: var(--coral-bd); }
+.s4 .t-time-badge { color: var(--coral-c); border-color: var(--coral-bd); background: #fff; }
+.s4 .t-ownership { background: #fff; border-color: var(--coral-bd); color: var(--coral-c); }
+.s4 .t-part-tag { background: var(--coral-bg); color: var(--coral-c); }
+
+/* Purple – S5 */
+.s5 .t-dot { border-color: var(--purple-c); background: var(--purple-bg); }
+.s5 .t-card { background: var(--purple-bg); border-color: var(--purple-bd); }
+.s5 .t-time-badge { color: var(--purple-c); border-color: var(--purple-bd); background: #fff; }
+.s5 .t-ownership { background: #fff; border-color: var(--purple-bd); color: var(--purple-c); }
+.s5 .t-part-tag { background: var(--purple-bg); color: var(--purple-c); }
+
+/* ── Ownership Table ── */
+.tbl-wrap {
+  border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+}
+.tbl-wrap table { width: 100%; border-collapse: collapse; }
+.tbl-wrap thead th {
+  background: var(--bg2);
+  padding: 13px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text3); text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.tbl-wrap tbody td {
+  padding: 12px 18px;
+  font-size: 13px; color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle; line-height: 1.5;
+}
+.tbl-wrap tbody tr:last-child td { border-bottom: none; }
+.tbl-wrap tbody tr:hover td { background: var(--bg2); }
+.td-stage { color: var(--text); font-weight: 500; white-space: nowrap; }
+.td-mark {
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.tag-pill {
+  display: inline-block;
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  padding: 2px 8px; border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text3); letter-spacing: 0.04em;
+}
+.tag-pill.yes { background: #e6f4ed; color: #0b6b42; border-color: #8fcfb0; font-weight: 500; }
+.tag-pill.no { background: var(--bg2); color: var(--text3); }
+
+/* ── Key points ── */
+.kp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.kp-card {
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px 22px;
+  background: var(--bg);
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .4s ease, transform .4s ease;
+  position: relative; overflow: hidden;
+}
+.kp-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.kp-card.vis { opacity: 1; transform: none; }
+.kp-card:nth-child(1){transition-delay:.06s} .kp-card:nth-child(1)::before{background:var(--blue-c)}
+.kp-card:nth-child(2){transition-delay:.14s} .kp-card:nth-child(2)::before{background:var(--teal-c)}
+.kp-card:nth-child(3){transition-delay:.22s} .kp-card:nth-child(3)::before{background:var(--amber-c)}
+.kp-card:nth-child(4){transition-delay:.30s} .kp-card:nth-child(4)::before{background:var(--purple-c)}
+.kp-card:nth-child(5){transition-delay:.38s} .kp-card:nth-child(5)::before{background:var(--coral-c)}
+.kp-card:nth-child(6){transition-delay:.46s} .kp-card:nth-child(6)::before{background:var(--gold)}
+
+.kp-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  letter-spacing: 0.1em; margin-bottom: 10px;
+}
+.kp-title {
+  font-size: 14px; font-weight: 500;
+  color: var(--text); margin-bottom: 8px;
+}
+.kp-body { font-size: 13px; color: var(--text2); line-height: 1.75; font-weight: 300; }
+.kp-body b { font-weight: 500; color: var(--text); }
+
+/* ── Regulation bar ── */
+.reg {
+  margin-top: 48px;
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 22px 26px;
+  background: var(--bg2);
+  display: flex; gap: 18px; align-items: flex-start;
+}
+.reg-icon-wrap {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--bg3); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.reg-heading {
+  font-size: 13px; font-weight: 500;
+  color: var(--text); margin-bottom: 5px;
+}
+.reg-body { font-size: 12.5px; color: var(--text2); line-height: 1.7; margin-bottom: 12px; font-weight: 300; }
+.reg-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.reg-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; padding: 3px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 4px; color: var(--blue-c);
+  letter-spacing: 0.04em; background: #fff;
+}
+
+/* ── Footnote ── */
+.footnote {
+  margin-top: 48px; padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px; color: var(--text3);
+  line-height: 1.7; font-weight: 300;
+}
+
+@media (max-width: 640px) {
+  .page { padding: 36px 20px 80px; }
+  .t-fork { grid-template-columns: 1fr; }
+  .t-participants { grid-template-columns: 1fr 1fr; }
+  .kp-grid { grid-template-columns: 1fr; }
+  .tbl-wrap { overflow-x: auto; }
+}
+
+/* ══ Overview Chart ══ */
+.ov-wrap {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0;
+  background: #fff;
+}
+.ov-header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex; align-items: baseline; gap: 14px;
+}
+.ov-header-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; font-weight: 600; color: var(--text);
+}
+.ov-header-sub { font-size: 12px; color: var(--text3); font-weight: 300; }
+.ov-grid {
+  display: grid;
+  grid-template-columns: 56px 1fr 1fr 1fr 1fr;
+}
+.ov-lbl {
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border2);
+  background: var(--bg2);
+}
+.ov-lbl span {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 12px; font-weight: 500;
+  color: var(--text2);
+  text-align: center; line-height: 1.6;
+  writing-mode: horizontal-tb;
+}
+.ov-axis-cell {
+  padding: 14px 16px 12px;
+  border-bottom: 2px solid var(--border2);
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  border-top: 3px solid transparent;
+}
+.ov-axis-cell:last-child { border-right: none; }
+.ov-axis-range {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; font-weight: 500;
+  letter-spacing: 0.04em; margin-bottom: 2px;
+}
+.ov-axis-step {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.12em; margin-bottom: 6px;
+  opacity: 0.5;
+}
+.ov-axis-bar { display: none; }
+.ov-axis-label-small { font-size: 10.5px; color: var(--text3); font-weight: 300; }
+.ov-method-cell {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.ov-method-cell:last-child { border-right: none; }
+.ov-method-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.ov-method-detail { font-size: 11px; color: var(--text3); line-height: 1.55; font-weight: 300; }
+.ov-method-stripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.ov-actors-cell {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+.ov-actors-cell:last-child { border-right: none; }
+.ov-actor-item { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 9px; }
+.ov-actor-item:last-child { margin-bottom: 0; }
+.ov-actor-dot2 { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.ov-actor-text { font-size: 11px; color: var(--text2); line-height: 1.35; }
+.ov-actor-text b { font-weight: 500; color: var(--text); display: block; margin-bottom: 2px; font-size: 12px; }
+.ov-own-cell {
+  padding: 12px 14px;
+  border-right: 1px solid var(--border);
+}
+.ov-own-cell:last-child { border-right: none; }
+.ov-own-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 500;
+  padding: 4px 10px; border-radius: 5px; border: 1px solid;
+  white-space: nowrap;
+}
+.ov-own-badge.unchanged { background: var(--bg2); color: var(--text3); border-color: var(--border); }
+.ov-own-badge.changed { background: #e6f4ed; color: #0b6b42; border-color: #8fcfb0; }
+.ov-own-note { font-size: 10.5px; color: var(--text3); margin-top: 6px; line-height: 1.5; font-weight: 300; }
+.ov-own-lbl { border-bottom: none; }
+.ov-own-cell { border-bottom: none; }
+.col-blue .ov-method-stripe { background: var(--blue-c); }
+.col-blue .ov-method-name { color: var(--blue-c); }
+.col-blue .ov-axis-bar { background: var(--blue-c); }
+.col-blue .ov-axis-range { color: var(--blue-c); }
+.col-teal .ov-method-stripe { background: var(--teal-c); }
+.col-teal .ov-method-name { color: var(--teal-c); }
+.col-teal .ov-axis-bar { background: var(--teal-c); }
+.col-teal .ov-axis-range { color: var(--teal-c); }
+.col-amber .ov-method-stripe { background: var(--amber-c); }
+.col-amber .ov-method-name { color: var(--amber-c); }
+.col-amber .ov-axis-bar { background: var(--amber-c); }
+.col-amber .ov-axis-range { color: var(--amber-c); }
+.col-coral .ov-method-stripe { background: var(--coral-c); }
+.col-coral .ov-method-name { color: var(--coral-c); }
+.col-coral .ov-axis-bar { background: var(--coral-c); }
+.col-coral .ov-axis-range { color: var(--coral-c); }
+
+
+.col-blue .ov-axis-step { color: var(--blue-c); }
+.col-teal .ov-axis-step { color: var(--teal-c); }
+.col-amber .ov-axis-step { color: var(--amber-c); }
+.col-coral .ov-axis-step { color: var(--coral-c); }
+.ov-axis-cell.col-blue { border-top-color: var(--blue-c); }
+.ov-axis-cell.col-teal { border-top-color: var(--teal-c); }
+.ov-axis-cell.col-amber { border-top-color: var(--amber-c); }
+.ov-axis-cell.col-coral { border-top-color: var(--coral-c); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══ Header ══ -->
+<header class="hd">
+  <div class="hd-eyebrow">Financial Risk Ecosystem · 2026</div>
+  <h1>催收业务生态分析</h1>
+  <p class="hd-sub">系统梳理金融机构逾期资产的流转路径、各阶段参与催收机构的类型与职能，以及债权所有权在不同环节的归属与变动机制。</p>
+</header>
+
+<!-- ══ Overview Chart ══ -->
+<div class="ov-wrap">
+  <div class="ov-header">
+    <div class="ov-header-title">资产生命周期总览</div>
+    <div class="ov-header-sub">横轴为逾期账龄，纵向呈现催收方式、参与主体与债权归属</div>
+  </div>
+
+  <div class="ov-grid">
+
+    <!-- ── Row 1: 账龄轴 ── -->
+    <div class="ov-lbl" style="border-bottom:2px solid var(--border2);background:var(--bg3)">
+      <span>账龄</span>
+    </div>
+    <div class="ov-axis-cell col-blue">
+      <div class="ov-axis-step">01</div>
+      <div class="ov-axis-range">M1 – M3</div>
+      <div class="ov-axis-label-small">早期逾期</div>
+    </div>
+    <div class="ov-axis-cell col-teal">
+      <div class="ov-axis-step">02</div>
+      <div class="ov-axis-range">M4 – M6</div>
+      <div class="ov-axis-label-small">中期逾期</div>
+    </div>
+    <div class="ov-axis-cell col-amber">
+      <div class="ov-axis-step">03</div>
+      <div class="ov-axis-range">M7 – M12</div>
+      <div class="ov-axis-label-small">重度逾期</div>
+    </div>
+    <div class="ov-axis-cell col-coral">
+      <div class="ov-axis-step">04</div>
+      <div class="ov-axis-range">M12+</div>
+      <div class="ov-axis-label-small">核销 / 长尾</div>
+    </div>
+
+    <!-- ── Row 2: 催收方式（紧贴轴） ── -->
+    <div class="ov-lbl">
+      <span>催收<br>方式</span>
+    </div>
+    <div class="ov-method-cell col-blue">
+      <div class="ov-method-stripe"></div>
+      <div class="ov-method-name">内部自催</div>
+      <div class="ov-method-detail">电话外呼 · 短信提醒 · 信函催告<br>内部团队分层触达，成本最低</div>
+    </div>
+    <div class="ov-method-cell col-teal">
+      <div class="ov-method-stripe"></div>
+      <div class="ov-method-name">委外催收</div>
+      <div class="ov-method-detail">专业催收公司 · 律师函 · 智能外呼<br>代理模式，佣金15%–40%</div>
+    </div>
+    <div class="ov-method-cell col-amber">
+      <div class="ov-method-stripe"></div>
+      <div class="ov-method-name">批量转让 / 诉讼</div>
+      <div class="ov-method-detail">折价出售给AMC（面值20%–50%）<br>或向法院提起诉讼追偿</div>
+    </div>
+    <div class="ov-method-cell col-coral">
+      <div class="ov-method-stripe"></div>
+      <div class="ov-method-name">核销 / 二次流转</div>
+      <div class="ov-method-detail">账面移出后再委外或再转让<br>ABS证券化 · 私募基金接盘</div>
+    </div>
+
+    <!-- ── Row 3: 参与主体 ── -->
+    <div class="ov-lbl">
+      <span>参与<br>主体</span>
+    </div>
+    <div class="ov-actors-cell">
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--blue-c)"></div>
+        <div class="ov-actor-text"><b>内部催收团队</b>分层拨打、优先级排序</div>
+      </div>
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--blue-c)"></div>
+        <div class="ov-actor-text"><b>风控评分模型</b>回收概率预测</div>
+      </div>
+    </div>
+    <div class="ov-actors-cell">
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--teal-c)"></div>
+        <div class="ov-actor-text"><b>专业催收公司</b>A/B/C类账龄分包承接</div>
+      </div>
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--teal-c)"></div>
+        <div class="ov-actor-text"><b>律师事务所</b>诉前函告 · 律师催告函</div>
+      </div>
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--teal-c)"></div>
+        <div class="ov-actor-text"><b>科技催收平台</b>智能外呼 · 效果付费</div>
+      </div>
+    </div>
+    <div class="ov-actors-cell">
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--amber-c)"></div>
+        <div class="ov-actor-text"><b>全国性AMC（四大）</b>华融、长城、东方、信达</div>
+      </div>
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--amber-c)"></div>
+        <div class="ov-actor-text"><b>地方AMC</b>各省批设，承接本地资产</div>
+      </div>
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--amber-c)"></div>
+        <div class="ov-actor-text"><b>法院 / 仲裁机构</b>受理诉讼、出具判决</div>
+      </div>
+    </div>
+    <div class="ov-actors-cell">
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--coral-c)"></div>
+        <div class="ov-actor-text"><b>核销后专项催收</b>极低折扣 · 长周期回收</div>
+      </div>
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--coral-c)"></div>
+        <div class="ov-actor-text"><b>私募基金 / 外资机构</b>NPL二级市场竞购</div>
+      </div>
+      <div class="ov-actor-item">
+        <div class="ov-actor-dot2" style="background:var(--coral-c)"></div>
+        <div class="ov-actor-text"><b>SPV / ABS投资者</b>证券化结构下的收益持有人</div>
+      </div>
+    </div>
+
+    <!-- ── Row 4: 债权归属（含变动） ── -->
+    <div class="ov-lbl ov-own-lbl">
+      <span>债权<br>归属</span>
+    </div>
+    <div class="ov-own-cell">
+      <div class="ov-own-badge unchanged">⊙ 不变动</div>
+      <div class="ov-own-note">金融机构完整持有<br>债权关系无任何转移</div>
+    </div>
+    <div class="ov-own-cell">
+      <div class="ov-own-badge unchanged">⊙ 不变动</div>
+      <div class="ov-own-note">金融机构持有<br>委外为代理关系，债权不转让</div>
+    </div>
+    <div class="ov-own-cell">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="ov-own-badge changed">→ 发生转移</div>
+        <div class="ov-own-badge unchanged" style="font-size:10.5px">⊙ 不变动</div>
+      </div>
+      <div class="ov-own-note">转让路径：须经银登中心公开竞价，归AMC/受让方<br>诉讼路径：仍归金融机构</div>
+    </div>
+    <div class="ov-own-cell">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="ov-own-badge unchanged">⊙ 不变动</div>
+        <div class="ov-own-badge changed" style="font-size:10.5px">→ 再转让后转移</div>
+      </div>
+      <div class="ov-own-note">核销≠放弃债权，账外持有<br>再转让时所有权方转至受让方</div>
+    </div>
+
+  </div><!-- /ov-grid -->
+</div>
+
+<!-- ══ Section 1：流转路径 ══ -->
+<div class="sec-hd">
+  <span class="sec-hd-num">01</span>
+  <span class="sec-hd-title">逾期资产流转路径</span>
+  <div class="sec-hd-line"></div>
+</div>
+
+<div class="timeline">
+
+  <!-- Stage 1 -->
+  <div class="t-item s1">
+    <div class="t-left">
+      <div class="t-dot"></div>
+      <div class="t-vline"></div>
+    </div>
+    <div class="t-card">
+      <div class="t-card-top">
+        <div class="t-stage-name">内部自催阶段</div>
+        <div class="t-time-badge">逾期 M1 – M3</div>
+      </div>
+      <div class="t-ownership">
+        <span class="t-ownership-icon">🏦</span>
+        债权所有权：金融机构持有，关系完整
+      </div>
+      <p class="t-desc">
+        借款人逾期后1–3个月，由<b>金融机构内部催收部门</b>主导处置。此阶段债权无任何转移，合规成本最低，也是回收率最高的窗口期——实务中通常能回收逾期账户中60%–70%的余额。催收方式以电话、短信、信函为主，配合内部风控模型进行账户分层和优先级排序。
+      </p>
+      <div class="t-participants">
+        <div class="t-part">
+          <div class="t-part-name">内部催收团队</div>
+          <div class="t-part-detail">电话外呼、短信提醒、信函催告；按逾期天数分层触达</div>
+          <div class="t-part-tag">核心执行方</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">风控评分模型</div>
+          <div class="t-part-detail">基于行为数据自动评估回收概率，生成催收优先级队列</div>
+          <div class="t-part-tag">辅助工具</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="t-arrow">
+    <div class="t-arrow-line"></div>
+    <span class="t-arrow-tip">▼</span>
+    <span class="t-arrow-text">内部自催3个月效果不足，移交委外</span>
+  </div>
+
+  <!-- Stage 2 -->
+  <div class="t-item s2">
+    <div class="t-left">
+      <div class="t-dot"></div>
+      <div class="t-vline"></div>
+    </div>
+    <div class="t-card">
+      <div class="t-card-top">
+        <div class="t-stage-name">委外催收阶段</div>
+        <div class="t-time-badge">逾期 M4 – M6</div>
+      </div>
+      <div class="t-ownership">
+        <span class="t-ownership-icon">📋</span>
+        债权所有权：仍归金融机构 — 委托代理关系，债权不转移
+      </div>
+      <p class="t-desc">
+        金融机构将催收业务<b>委托给外部机构</b>，但债权所有权不发生任何转让。外部机构以<b>受托代理人</b>身份操作，按实际回收金额的一定比例收取佣金（通常15%–40%）。需特别注意：<b>委外机构的违规行为，法律责任仍由金融机构承担</b>，因此须对委外方进行持续的资质审查与行为管控。
+      </p>
+      <div class="t-participants">
+        <div class="t-part">
+          <div class="t-part-name">专业催收公司</div>
+          <div class="t-part-detail">承接电催、上门催收、法催全链路；通常按A/B/C类账龄分包</div>
+          <div class="t-part-tag">佣金制 15–40%</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">律师事务所</div>
+          <div class="t-part-detail">出具律师催告函、诉前函告；正式诉讼立案在M7+阶段发起</div>
+          <div class="t-part-tag">按件或比例收费</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">科技催收平台</div>
+          <div class="t-part-detail">智能外呼机器人、数据驱动账户分层、SaaS订阅+效果付费</div>
+          <div class="t-part-tag">效果付费为主</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="t-arrow">
+    <div class="t-arrow-line"></div>
+    <span class="t-arrow-tip">▼</span>
+    <span class="t-arrow-text">委外6个月仍无效，资产进入处置决策</span>
+  </div>
+
+  <!-- Stage 3 -->
+  <div class="t-item s3">
+    <div class="t-left">
+      <div class="t-dot"></div>
+      <div class="t-vline"></div>
+    </div>
+    <div class="t-card">
+      <div class="t-card-top">
+        <div class="t-stage-name">重度逾期处置阶段</div>
+        <div class="t-time-badge">逾期 M7 – M12</div>
+      </div>
+      <div class="t-ownership">
+        <span class="t-ownership-icon">⚖️</span>
+        债权所有权：路径分叉 — 转让则转移，诉讼则不变
+      </div>
+      <p class="t-desc">
+        此阶段金融机构面临两条路径选择，<b>所有权归属因路径不同而分叉</b>：
+      </p>
+      <div class="t-fork">
+        <div class="t-fork-box">
+          <div class="t-fork-label">路径 A · 批量债权转让</div>
+          <div class="t-fork-body">将资产以<b>面值20%–50%的折扣价</b>打包出售给AMC或其他受让方。债权所有权<b>完整转移</b>，金融机构实现风险出表，AMC成为新债权人。</div>
+        </div>
+        <div class="t-fork-box">
+          <div class="t-fork-label">路径 B · 司法追偿</div>
+          <div class="t-fork-body">向法院提起诉讼或申请仲裁，获得生效判决后申请强制执行、财产查封或拍卖。<b>债权所有权保持不变</b>，金融机构作为债权人继续追索。</div>
+        </div>
+      </div>
+      <div class="t-participants">
+        <div class="t-part">
+          <div class="t-part-name">全国性AMC（四大）</div>
+          <div class="t-part-detail">华融、长城、东方、信达；资金规模大，可承接大批量资产包</div>
+          <div class="t-part-tag">折价收购</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">地方AMC</div>
+          <div class="t-part-detail">各省批设，主要消化辖区内中小银行及消金机构的不良资产</div>
+          <div class="t-part-tag">区域处置</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">法院 / 仲裁机构</div>
+          <div class="t-part-detail">受理诉讼或仲裁申请，出具生效文书后移送执行局</div>
+          <div class="t-part-tag">司法程序</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="t-arrow">
+    <div class="t-arrow-line"></div>
+    <span class="t-arrow-tip">▼</span>
+    <span class="t-arrow-text">逾期超12个月仍无法回收，金融机构启动核销</span>
+  </div>
+
+  <!-- Stage 4 -->
+  <div class="t-item s4">
+    <div class="t-left">
+      <div class="t-dot"></div>
+      <div class="t-vline"></div>
+    </div>
+    <div class="t-card">
+      <div class="t-card-top">
+        <div class="t-stage-name">账面核销与二次流转阶段</div>
+        <div class="t-time-badge">逾期 M12+</div>
+      </div>
+      <div class="t-ownership">
+        <span class="t-ownership-icon">📑</span>
+        债权所有权：核销≠放弃债权，账外持有；AMC持有的资产归AMC
+      </div>
+      <p class="t-desc">
+        金融机构将长期无法回收的资产计提损失、移出资产负债表（"出表"），但<b>债权在法律上依然存续</b>，不因核销而消灭。核销后资产可以继续委外催收，也可以更低折扣再次转让。与此同时，前阶段已转让给AMC的资产，在AMC内部进入重组处置流程。
+      </p>
+      <div class="t-participants">
+        <div class="t-part">
+          <div class="t-part-name">金融机构（账外持有）</div>
+          <div class="t-part-detail">核销后仍可在诉讼时效内委外再催或低价出售；债权追索权不丧失</div>
+          <div class="t-part-tag">账外管理</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">AMC 重组处置</div>
+          <div class="t-part-detail">债务重组与展期、抵押物评估拍卖、NPL资产证券化（ABS）</div>
+          <div class="t-part-tag">多路径变现</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">二级市场流转</div>
+          <div class="t-part-detail">不良资产私募基金、外资机构参与竞购；资产包可多次转手</div>
+          <div class="t-part-tag">NPL 二级市场</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="t-arrow">
+    <div class="t-arrow-line"></div>
+    <span class="t-arrow-tip">▼</span>
+    <span class="t-arrow-text">债权最终由持有方自主处置或再委外，形成闭环</span>
+  </div>
+
+  <!-- Stage 5 -->
+  <div class="t-item s5">
+    <div class="t-left">
+      <div class="t-dot"></div>
+    </div>
+    <div class="t-card">
+      <div class="t-card-top">
+        <div class="t-stage-name">终端处置阶段</div>
+        <div class="t-time-badge">核销 / 长尾</div>
+      </div>
+      <div class="t-ownership">
+        <span class="t-ownership-icon">🏁</span>
+        债权所有权：最终购买方（AMC、私募基金、专项机构）
+      </div>
+      <p class="t-desc">
+        债权由最终持有方自主决策后续处置方式。部分专业机构以<b>极低折扣（面值5%以下）</b>专门收购核销后的长尾资产，通过长周期、分散式的催收策略获取超额回报。处置结果须依规向监管报送，形成完整的资产生命周期记录。
+      </p>
+      <div class="t-participants">
+        <div class="t-part">
+          <div class="t-part-name">核销后专项催收机构</div>
+          <div class="t-part-detail">以极低折扣购入，长周期分批次催收；部分专注特定资产类型</div>
+          <div class="t-part-tag">终端执行</div>
+        </div>
+        <div class="t-part">
+          <div class="t-part-name">债权人自主处置</div>
+          <div class="t-part-detail">经成本收益评估后，决定继续委外、低价出售或启动诉讼时效终止</div>
+          <div class="t-part-tag">自主决策</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /timeline -->
+
+
+<!-- ══ Section 2：所有权归属汇总 ══ -->
+<div class="sec-hd">
+  <span class="sec-hd-num">02</span>
+  <span class="sec-hd-title">债权所有权归属汇总</span>
+  <div class="sec-hd-line"></div>
+</div>
+
+<div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>阶段</th>
+        <th>账龄参考</th>
+        <th>债权所有权归属</th>
+        <th>转移方式</th>
+        <th>所有权是否变动</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-stage"><span class="td-mark"><span class="dot" style="background:var(--blue-c)"></span>内部自催</span></td>
+        <td>M1–M3</td>
+        <td>金融机构</td>
+        <td>无，内部处置</td>
+        <td><span class="tag-pill no">不变动</span></td>
+      </tr>
+      <tr>
+        <td class="td-stage"><span class="td-mark"><span class="dot" style="background:var(--teal-c)"></span>委外催收</span></td>
+        <td>M4–M6</td>
+        <td>金融机构</td>
+        <td>委托代理，债权不转让</td>
+        <td><span class="tag-pill no">不变动</span></td>
+      </tr>
+      <tr>
+        <td class="td-stage"><span class="td-mark"><span class="dot" style="background:var(--amber-c)"></span>批量债权转让</span></td>
+        <td>M7–M12</td>
+        <td>AMC / 受让方</td>
+        <td>协议转让，完整过户</td>
+        <td><span class="tag-pill yes">发生转移</span></td>
+      </tr>
+      <tr>
+        <td class="td-stage"><span class="td-mark"><span class="dot" style="background:var(--amber-c)"></span>司法追偿</span></td>
+        <td>M7–M12</td>
+        <td>金融机构</td>
+        <td>诉讼 / 仲裁，债权不转让</td>
+        <td><span class="tag-pill no">不变动</span></td>
+      </tr>
+      <tr>
+        <td class="td-stage"><span class="td-mark"><span class="dot" style="background:var(--coral-c)"></span>账面核销（未转让）</span></td>
+        <td>M12+</td>
+        <td>金融机构（账外持有）</td>
+        <td>会计核销，非法律放弃</td>
+        <td><span class="tag-pill no">不变动</span></td>
+      </tr>
+      <tr>
+        <td class="td-stage"><span class="td-mark"><span class="dot" style="background:var(--coral-c)"></span>核销后再转让</span></td>
+        <td>M12+</td>
+        <td>最终受让机构</td>
+        <td>再次协议转让</td>
+        <td><span class="tag-pill yes">发生转移</span></td>
+      </tr>
+      <tr>
+        <td class="td-stage"><span class="td-mark"><span class="dot" style="background:var(--purple-c)"></span>NPL 证券化（ABS）</span></td>
+        <td>灵活</td>
+        <td>SPV 持有，收益权归投资者</td>
+        <td>结构化打包，转入SPV</td>
+        <td><span class="tag-pill yes">发生转移</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══ Section 3：实务要点 ══ -->
+<div class="sec-hd">
+  <span class="sec-hd-num">03</span>
+  <span class="sec-hd-title">关键实务要点</span>
+  <div class="sec-hd-line"></div>
+</div>
+
+<div class="kp-grid">
+  <div class="kp-card">
+    <div class="kp-num">KEY POINT 01</div>
+    <div class="kp-title">委外不等于免责</div>
+    <div class="kp-body">金融机构将催收业务委托外部机构后，债权所有权不发生转移，委外机构的违规催收行为（如骚扰、威胁）所产生的法律责任依然由金融机构承担，须对委外方进行持续的准入审查和过程管控。</div>
+  </div>
+  <div class="kp-card">
+    <div class="kp-num">KEY POINT 02</div>
+    <div class="kp-title">核销≠放弃债权</div>
+    <div class="kp-body">账面核销是会计处理，金融机构将资产移出资产负债表、计提损失，但债权在法律上依然存续。在诉讼时效（通常3年）届满前，该债权仍可再委托催收、低价出售或通过法律手段追索。</div>
+  </div>
+  <div class="kp-card">
+    <div class="kp-num">KEY POINT 03</div>
+    <div class="kp-title">折扣率的定价博弈</div>
+    <div class="kp-body">批量转让时，AMC收购价通常为面值的20%–50%（消费信贷类资产通常更低）。收购价偏低则金融机构账面损失扩大，收购价偏高则AMC回报空间收窄——双方博弈的核心是对资产未来回收率的预判差异。</div>
+  </div>
+  <div class="kp-card">
+    <div class="kp-num">KEY POINT 04</div>
+    <div class="kp-title">数据合规新约束</div>
+    <div class="kp-body">《个人信息保护法》实施后，债权转让须同步解决借款人个人信息的授权传递问题。境外AMC或外资基金入场还需满足数据出境安全评估要求，增加了交易的合规成本与时间成本。</div>
+  </div>
+  <div class="kp-card">
+    <div class="kp-num">KEY POINT 05</div>
+    <div class="kp-title">不良资产转让须公开竞价</div>
+    <div class="kp-body">金融机构将不良资产包转让给AMC，通常须通过<b>公开招标或竞价</b>方式进行，不得私下点对点交易，以防止利益输送和国有资产流失。银行业信贷资产登记流转中心（银登中心）是法定挂牌平台，资产包须在此公示后方可转让。</div>
+  </div>
+  <div class="kp-card">
+    <div class="kp-num">KEY POINT 06</div>
+    <div class="kp-title">个人贷款批量转让2021年才开闸</div>
+    <div class="kp-body">2021年前，监管明确禁止个人贷款不良资产批量转让给AMC，只有对公贷款（企业贷款）可以打包出售。2021年原银保监会发布试点政策，个人消费贷、信用卡不良资产方可通过银登中心批量转让，目前仍处于试点扩容阶段。</div>
+  </div>
+</div>
+
+<!-- Regulation -->
+<div class="reg">
+  <div class="reg-icon-wrap">⚖️</div>
+  <div>
+    <div class="reg-heading">监管框架</div>
+    <div class="reg-body">催收业务受多层监管体系约束。金融机构须在以下法规框架内设计委外策略与资产处置方案，违规将面临罚款、暂停业务乃至吊销牌照等处罚。</div>
+    <div class="reg-tags">
+      <span class="reg-tag">中国人民银行</span>
+      <span class="reg-tag">国家金融监督管理总局</span>
+      <span class="reg-tag">商业银行委外催收管理办法</span>
+      <span class="reg-tag">个人信息保护法</span>
+      <span class="reg-tag">民法典·诉讼时效规定</span>
+      <span class="reg-tag">最高人民法院强制执行规定</span>
+      <span class="reg-tag">银行业信贷资产登记流转中心（银登中心）</span>
+      <span class="reg-tag">金融企业不良资产批量转让管理办法</span>
+    </div>
+  </div>
+</div>
+
+<div class="footnote">
+  注：账龄（M1–M12+）为行业通用参考区间，各金融机构实际操作节点因内部政策、资产类型（信用卡、消费贷、抵押贷等）及监管要求不同而存在差异。折扣率数据为市场参考区间，非监管规定标准。诉讼时效以民法典规定为准，一般为3年，特殊情形除外。
+</div>
+
+</div><!-- /page -->
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.06 });
+
+document.querySelectorAll('.t-item, .kp-card').forEach(el => io.observe(el));
+
+// Immediate check for above-fold elements
+requestAnimationFrame(() => {
+  document.querySelectorAll('.t-item, .kp-card').forEach(el => {
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.95)
+      el.classList.add('vis');
+  });
+});
+</script>
+</body>
+</html>
